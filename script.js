@@ -1,29 +1,27 @@
-// ───── UrgentCart Inactivity Logic (1-Time Overlay After 1 Hour) ─────
+// ───── Storetool Inactivity Overlay ─────
 (function () {
   const ONE_HOUR = 60 * 60 * 1000;
-  const FORM_SHOWN_KEY = 'urgentCartFormShown';
+  const FORM_SHOWN_KEY = 'storetoolOverlayShown';
   let inactivityTimer;
 
-  // Create overlay
   const overlay = document.createElement('div');
-  overlay.id = 'urgentCartOverlay';
+  overlay.id = 'storetoolOverlay';
   Object.assign(overlay.style, {
     position: 'fixed',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.95)',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'black',
     color: 'white',
     display: 'none',
-    zIndex: 9999,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'column',
+    zIndex: 9999,
     fontFamily: 'Arial, sans-serif'
   });
 
-  // Exit button
   const exitBtn = document.createElement('button');
   exitBtn.textContent = 'Exit';
   Object.assign(exitBtn.style, {
@@ -32,44 +30,33 @@
     backgroundColor: '#fff',
     color: '#000',
     border: 'none',
-    cursor: 'pointer',
     borderRadius: '8px',
-    marginTop: '20px'
+    cursor: 'pointer'
   });
 
   overlay.appendChild(exitBtn);
   document.body.appendChild(overlay);
 
-  // Show overlay only once
-  function showOverlayOnce() {
+  function showOverlay() {
     if (!localStorage.getItem(FORM_SHOWN_KEY)) {
       overlay.style.display = 'flex';
       localStorage.setItem(FORM_SHOWN_KEY, 'true');
-      expireCart();
+      console.log('🛒 Storetool overlay shown. Cart expired.');
     }
   }
 
-  // Example cart-expiry logic (replace with your real one)
-  function expireCart() {
-    console.log('Cart expired due to inactivity');
-    // TODO: You can clear the cart using backend call here
-  }
-
-  // Exit hides overlay
-  exitBtn.addEventListener('click', () => {
+  exitBtn.onclick = () => {
     overlay.style.display = 'none';
-  });
+  };
 
-  // Reset timer on activity
-  function resetInactivityTimer() {
+  function resetTimer() {
     clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(showOverlayOnce, ONE_HOUR);
+    inactivityTimer = setTimeout(showOverlay, ONE_HOUR);
   }
 
   ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
-    window.addEventListener(evt, resetInactivityTimer)
+    window.addEventListener(evt, resetTimer)
   );
 
-  // Start timer immediately
-  resetInactivityTimer();
+  resetTimer();
 })();
