@@ -1,62 +1,63 @@
 let inactivityTimeout;
-let overlayDisplayed = false;
 let countdownInterval;
 const SESSION_TIMEOUT = 60 * 60; // 1 hour in seconds
-
 let timeLeft = SESSION_TIMEOUT;
 
 function resetInactivityTimer() {
   clearTimeout(inactivityTimeout);
   clearInterval(countdownInterval);
-  startCountdown();
+  timeLeft = SESSION_TIMEOUT;
   inactivityTimeout = setTimeout(showOverlay, SESSION_TIMEOUT * 1000);
 }
 
 function showOverlay() {
-  if (overlayDisplayed) return;
-  overlayDisplayed = true;
+  // Prevent duplicates
+  if (document.getElementById("inactivity-overlay")) return;
 
+  // Create overlay
   const overlay = document.createElement("div");
   overlay.id = "inactivity-overlay";
-  overlay.style.position = "fixed";
-  overlay.style.top = "0";
-  overlay.style.left = "0";
-  overlay.style.width = "100%";
-  overlay.style.height = "100%";
-  overlay.style.backgroundColor = "rgba(0, 0, 0, 0.9)";
-  overlay.style.display = "flex";
-  overlay.style.flexDirection = "column";
-  overlay.style.justifyContent = "center";
-  overlay.style.alignItems = "center";
-  overlay.style.zIndex = "9999";
-  overlay.style.color = "white";
-  overlay.style.fontSize = "18px";
-  overlay.style.textAlign = "center";
+  Object.assign(overlay.style, {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "white",
+    fontSize: "18px",
+    zIndex: 9999,
+    textAlign: "center",
+  });
 
-  const message = document.createElement("p");
+  // Message
+  const message = document.createElement("div");
   message.textContent = "product will be automatically removed from cart after session timeout";
+  message.style.marginBottom = "20px";
 
+  // Exit button
   const exitBtn = document.createElement("button");
   exitBtn.textContent = "Exit";
-  exitBtn.style.marginTop = "20px";
-  exitBtn.style.padding = "10px 20px";
-  exitBtn.style.fontSize = "16px";
-  exitBtn.style.cursor = "pointer";
-  exitBtn.style.backgroundColor = "#ffffff";
-  exitBtn.style.color = "#000000";
-  exitBtn.style.border = "none";
-  exitBtn.style.borderRadius = "5px";
+  Object.assign(exitBtn.style, {
+    padding: "10px 20px",
+    fontSize: "16px",
+    backgroundColor: "#ffffff",
+    color: "#000000",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    marginBottom: "20px"
+  });
 
-  exitBtn.onclick = () => {
-    document.body.removeChild(overlay);
-    overlayDisplayed = false;
-    resetInactivityTimer();
-  };
-
+  // Timer at bottom
   const countdown = document.createElement("div");
   countdown.id = "countdown-timer";
   countdown.style.position = "absolute";
-  countdown.style.bottom = "10px";
+  countdown.style.bottom = "20px";
   countdown.style.fontSize = "16px";
 
   overlay.appendChild(message);
@@ -64,30 +65,33 @@ function showOverlay() {
   overlay.appendChild(countdown);
   document.body.appendChild(overlay);
 
+  exitBtn.onclick = () => {
+    clearInterval(countdownInterval);
+    overlay.remove();
+    resetInactivityTimer();
+  };
+
   updateCountdown(countdown);
   countdownInterval = setInterval(() => updateCountdown(countdown), 1000);
 }
 
-function updateCountdown(element) {
+function updateCountdown(display) {
   if (timeLeft <= 0) {
     clearInterval(countdownInterval);
-    element.textContent = "Session expired.";
+    display.textContent = "Session expired.";
     return;
   }
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  element.textContent = `Session expires in ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  display.textContent = `Session expires in ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   timeLeft--;
 }
 
-// Start the timer
-function initInactivityWatcher() {
-  document.addEventListener("mousemove", resetInactivityTimer);
-  document.addEventListener("keydown", resetInactivityTimer);
-  document.addEventListener("scroll", resetInactivityTimer);
-  document.addEventListener("touchstart", resetInactivityTimer);
+function startWatcher() {
+  ["mousemove", "keydown", "scroll", "touchstart"].forEach(evt =>
+    document.addEventListener(evt, resetInactivityTimer)
+  );
   resetInactivityTimer();
 }
 
-// Run it
-window.onload = initInactivityWatcher;
+window.onload = startWatcher;
