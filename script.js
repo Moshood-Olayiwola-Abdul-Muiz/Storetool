@@ -1,10 +1,10 @@
 let timer;
 let countdown;
-let counter = 600; // 10 minutes in seconds
-let inactivityTime = 5000; // 5 seconds
+let counter = 3600; // 1 hour in seconds
 let timerVisible = false;
+let inactivityTime = 3600000; // 1 hour in milliseconds
 
-// Create urgency timer
+// Create the urgency box (the black countdown box)
 const urgencyBox = document.createElement('div');
 urgencyBox.style.position = 'fixed';
 urgencyBox.style.bottom = '20px';
@@ -18,79 +18,65 @@ urgencyBox.style.zIndex = '9999';
 urgencyBox.style.display = 'none';
 document.body.appendChild(urgencyBox);
 
-// Create form page overlay
-const formOverlay = document.createElement('div');
-formOverlay.style.position = 'fixed';
-formOverlay.style.top = '0';
-formOverlay.style.left = '0';
-formOverlay.style.width = '100%';
-formOverlay.style.height = '100%';
-formOverlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-formOverlay.style.color = '#fff';
-formOverlay.style.display = 'flex';
-formOverlay.style.flexDirection = 'column';
-formOverlay.style.justifyContent = 'center';
-formOverlay.style.alignItems = 'center';
-formOverlay.style.zIndex = '10000';
+// Create a full-screen overlay form
+const overlay = document.createElement('div');
+overlay.style.position = 'fixed';
+overlay.style.top = 0;
+overlay.style.left = 0;
+overlay.style.width = '100%';
+overlay.style.height = '100%';
+overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+overlay.style.color = '#fff';
+overlay.style.display = 'flex';
+overlay.style.flexDirection = 'column';
+overlay.style.justifyContent = 'center';
+overlay.style.alignItems = 'center';
+overlay.style.zIndex = '10000';
+overlay.style.fontSize = '24px';
 
-const message = document.createElement('p');
-message.textContent = 'Almost there! Enter your email to claim your offer.';
-message.style.fontSize = '20px';
-message.style.marginBottom = '20px';
-
-const input = document.createElement('input');
-input.type = 'email';
-input.placeholder = 'Enter your email';
-input.style.padding = '10px';
-input.style.fontSize = '16px';
-input.style.borderRadius = '5px';
-input.style.border = 'none';
-input.style.marginBottom = '20px';
-input.style.width = '80%';
-input.style.maxWidth = '300px';
-
+// Exit button
 const exitButton = document.createElement('button');
 exitButton.textContent = 'Exit';
+exitButton.style.marginTop = '20px';
 exitButton.style.padding = '10px 20px';
-exitButton.style.fontSize = '16px';
-exitButton.style.borderRadius = '5px';
-exitButton.style.border = 'none';
-exitButton.style.backgroundColor = '#ff0000';
-exitButton.style.color = '#fff';
+exitButton.style.fontSize = '18px';
 exitButton.style.cursor = 'pointer';
+exitButton.style.border = 'none';
+exitButton.style.borderRadius = '5px';
+exitButton.style.backgroundColor = '#fff';
+exitButton.style.color = '#000';
+
 exitButton.onclick = () => {
-  formOverlay.style.display = 'none'; // hide form
+  overlay.remove(); // hide the form
+  showTimer(); // continue showing countdown
 };
 
-formOverlay.appendChild(message);
-formOverlay.appendChild(input);
-formOverlay.appendChild(exitButton);
-document.body.appendChild(formOverlay);
+overlay.appendChild(exitButton);
 
-// Timer logic
+// Show timer countdown
 function showTimer() {
   if (!timerVisible) {
     urgencyBox.style.display = 'block';
     timerVisible = true;
-    counter = 600;
+    counter = 3600;
     updateCountdown();
     countdown = setInterval(updateCountdown, 1000);
   }
 }
 
+// Hide timer
 function hideTimer() {
   urgencyBox.style.display = 'none';
   clearInterval(countdown);
   timerVisible = false;
 }
 
+// Update countdown display
 function updateCountdown() {
   let minutes = Math.floor(counter / 60);
   let seconds = counter % 60;
   if (counter > 0) {
-    urgencyBox.textContent = `Hurry! Your cart will expire in ${minutes}:${seconds
-      .toString()
-      .padStart(2, '0')}`;
+    urgencyBox.textContent = `Hurry! Your cart will expire in ${minutes}:${seconds.toString().padStart(2, '0')}`;
     counter--;
   } else {
     urgencyBox.textContent = `Your cart has expired!`;
@@ -98,14 +84,19 @@ function updateCountdown() {
   }
 }
 
+// Reset inactivity timer and start over
 function resetInactivityTimer() {
   clearTimeout(timer);
   hideTimer();
-  showTimer(); // start countdown on first activity
+  timer = setTimeout(() => {
+    document.body.appendChild(overlay); // show form/overlay
+  }, inactivityTime);
 }
 
-['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach((event) => {
+// User activity detection
+['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach(event => {
   document.addEventListener(event, resetInactivityTimer);
 });
 
+// Start the inactivity watcher
 resetInactivityTimer();
