@@ -1,62 +1,69 @@
-// ───── Storetool Inactivity Overlay ─────
+// Storetool – Clean urgency overlay after 1 hour of inactivity
 (function () {
-  const ONE_HOUR = 60 * 60 * 1000;
-  const FORM_SHOWN_KEY = 'storetoolOverlayShown';
+  const INACTIVITY_LIMIT = 60 * 60 * 1000; // 1 hour
+  const OVERLAY_SHOWN_KEY = 'storetool_overlay_shown';
   let inactivityTimer;
 
+  // Create overlay
   const overlay = document.createElement('div');
-  overlay.id = 'storetoolOverlay';
-  Object.assign(overlay.style, {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'black',
-    color: 'white',
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column',
-    zIndex: 9999,
-    fontFamily: 'Arial, sans-serif'
-  });
+  overlay.style.position = 'fixed';
+  overlay.style.top = 0;
+  overlay.style.left = 0;
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.backgroundColor = '#000';
+  overlay.style.display = 'none';
+  overlay.style.zIndex = 9999;
+  overlay.style.justifyContent = 'center';
+  overlay.style.alignItems = 'center';
+  overlay.style.flexDirection = 'column';
+  overlay.style.fontFamily = 'Arial, sans-serif';
 
-  const exitBtn = document.createElement('button');
-  exitBtn.textContent = 'Exit';
-  Object.assign(exitBtn.style, {
-    padding: '12px 24px',
-    fontSize: '18px',
-    backgroundColor: '#fff',
-    color: '#000',
-    border: 'none',
-    borderRadius: '8px',
-    cursor: 'pointer'
-  });
+  // Exit button
+  const exitButton = document.createElement('button');
+  exitButton.textContent = 'Exit';
+  exitButton.style.padding = '14px 28px';
+  exitButton.style.fontSize = '18px';
+  exitButton.style.backgroundColor = '#fff';
+  exitButton.style.color = '#000';
+  exitButton.style.border = 'none';
+  exitButton.style.borderRadius = '8px';
+  exitButton.style.cursor = 'pointer';
 
-  overlay.appendChild(exitBtn);
+  // Add button to overlay
+  overlay.appendChild(exitButton);
+  overlay.style.display = 'none';
+  overlay.style.display = 'flex';
+  overlay.hidden = true;
   document.body.appendChild(overlay);
 
+  // Function to show overlay
   function showOverlay() {
-    if (!localStorage.getItem(FORM_SHOWN_KEY)) {
+    if (!localStorage.getItem(OVERLAY_SHOWN_KEY)) {
       overlay.style.display = 'flex';
-      localStorage.setItem(FORM_SHOWN_KEY, 'true');
-      console.log('🛒 Storetool overlay shown. Cart expired.');
+      localStorage.setItem(OVERLAY_SHOWN_KEY, 'true');
+
+      // (Optional Future) Auto-expire cart logic here
+      // localStorage.removeItem('cart');
     }
   }
 
-  exitBtn.onclick = () => {
+  // Exit button click
+  exitButton.addEventListener('click', () => {
     overlay.style.display = 'none';
-  };
+  });
 
-  function resetTimer() {
+  // Reset timer on user activity
+  function resetInactivityTimer() {
     clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(showOverlay, ONE_HOUR);
+    inactivityTimer = setTimeout(showOverlay, INACTIVITY_LIMIT);
   }
 
-  ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
-    window.addEventListener(evt, resetTimer)
+  // Track all user activity
+  ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(event =>
+    document.addEventListener(event, resetInactivityTimer)
   );
 
-  resetTimer();
+  // Start timer
+  resetInactivityTimer();
 })();
