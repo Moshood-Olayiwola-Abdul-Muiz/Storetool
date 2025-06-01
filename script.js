@@ -4,7 +4,7 @@ let counter = 3600; // 1 hour in seconds
 let timerVisible = false;
 let inactivityTime = 3600000; // 1 hour in milliseconds
 
-// Create the urgency box (the black countdown box)
+// Create urgency countdown box (bottom corner)
 const urgencyBox = document.createElement('div');
 urgencyBox.style.position = 'fixed';
 urgencyBox.style.bottom = '20px';
@@ -18,42 +18,45 @@ urgencyBox.style.zIndex = '9999';
 urgencyBox.style.display = 'none';
 document.body.appendChild(urgencyBox);
 
-// Create a full-screen overlay form
+// Create overlay popup
 const overlay = document.createElement('div');
 overlay.style.position = 'fixed';
-overlay.style.top = 0;
-overlay.style.left = 0;
+overlay.style.top = '0';
+overlay.style.left = '0';
 overlay.style.width = '100%';
 overlay.style.height = '100%';
-overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-overlay.style.color = '#fff';
+overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
 overlay.style.display = 'flex';
 overlay.style.flexDirection = 'column';
 overlay.style.justifyContent = 'center';
 overlay.style.alignItems = 'center';
 overlay.style.zIndex = '10000';
-overlay.style.fontSize = '24px';
 
-// Exit button
+// Text inside overlay
+const overlayText = document.createElement('p');
+overlayText.textContent = '🚨 Urgent! Your cart is at risk of expiring.';
+overlayText.style.color = '#fff';
+overlayText.style.fontSize = '20px';
+overlayText.style.marginBottom = '20px';
+overlay.appendChild(overlayText);
+
+// Exit button inside overlay
 const exitButton = document.createElement('button');
 exitButton.textContent = 'Exit';
-exitButton.style.marginTop = '20px';
-exitButton.style.padding = '10px 20px';
 exitButton.style.fontSize = '18px';
-exitButton.style.cursor = 'pointer';
+exitButton.style.padding = '12px 24px';
+exitButton.style.borderRadius = '6px';
 exitButton.style.border = 'none';
-exitButton.style.borderRadius = '5px';
-exitButton.style.backgroundColor = '#fff';
-exitButton.style.color = '#000';
-
+exitButton.style.backgroundColor = '#ffffff';
+exitButton.style.color = '#000000';
+exitButton.style.cursor = 'pointer';
 exitButton.onclick = () => {
-  overlay.remove(); // hide the form
-  showTimer(); // continue showing countdown
+  overlay.remove();       // Remove the popup
+  showTimer();            // Start the countdown
 };
-
 overlay.appendChild(exitButton);
 
-// Show timer countdown
+// Show countdown timer
 function showTimer() {
   if (!timerVisible) {
     urgencyBox.style.display = 'block';
@@ -64,14 +67,14 @@ function showTimer() {
   }
 }
 
-// Hide timer
+// Hide countdown
 function hideTimer() {
   urgencyBox.style.display = 'none';
   clearInterval(countdown);
   timerVisible = false;
 }
 
-// Update countdown display
+// Update countdown every second
 function updateCountdown() {
   let minutes = Math.floor(counter / 60);
   let seconds = counter % 60;
@@ -84,19 +87,19 @@ function updateCountdown() {
   }
 }
 
-// Reset inactivity timer and start over
+// Reset inactivity timer
 function resetInactivityTimer() {
   clearTimeout(timer);
   hideTimer();
   timer = setTimeout(() => {
-    document.body.appendChild(overlay); // show form/overlay
+    document.body.appendChild(overlay);
   }, inactivityTime);
 }
 
-// User activity detection
-['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach(event => {
+// User activity listener
+['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach((event) => {
   document.addEventListener(event, resetInactivityTimer);
 });
 
-// Start the inactivity watcher
+// Initialize
 resetInactivityTimer();
