@@ -1,109 +1,75 @@
-let timer;
-let countdown;
-let counter = 3600; // 1 hour in seconds
-let timerVisible = false;
-let inactivityTime = 3600000; // 1 hour in milliseconds
+// ───── UrgentCart Inactivity Logic (1-Time Overlay After 1 Hour) ─────
+(function () {
+  const ONE_HOUR = 60 * 60 * 1000;
+  const FORM_SHOWN_KEY = 'urgentCartFormShown';
+  let inactivityTimer;
 
-// ✅ Countdown timer box at bottom-right
-const urgencyBox = document.createElement('div');
-urgencyBox.style.position = 'fixed';
-urgencyBox.style.bottom = '20px';
-urgencyBox.style.right = '20px';
-urgencyBox.style.padding = '10px 20px';
-urgencyBox.style.backgroundColor = '#000';
-urgencyBox.style.color = '#fff';
-urgencyBox.style.fontSize = '16px';
-urgencyBox.style.borderRadius = '5px';
-urgencyBox.style.zIndex = '9999';
-urgencyBox.style.display = 'none';
-document.body.appendChild(urgencyBox);
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'urgentCartOverlay';
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    color: 'white',
+    display: 'none',
+    zIndex: 9999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'column',
+    fontFamily: 'Arial, sans-serif'
+  });
 
-// ✅ Overlay popup alert
-const overlay = document.createElement('div');
-overlay.style.position = 'fixed';
-overlay.style.top = '0';
-overlay.style.left = '0';
-overlay.style.width = '100%';
-overlay.style.height = '100%';
-overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.95)';
-overlay.style.display = 'flex';
-overlay.style.flexDirection = 'column';
-overlay.style.justifyContent = 'center';
-overlay.style.alignItems = 'center';
-overlay.style.zIndex = '10000';
-overlay.style.color = '#fff';
-overlay.style.fontSize = '22px';
-overlay.style.textAlign = 'center';
+  // Exit button
+  const exitBtn = document.createElement('button');
+  exitBtn.textContent = 'Exit';
+  Object.assign(exitBtn.style, {
+    padding: '12px 24px',
+    fontSize: '18px',
+    backgroundColor: '#fff',
+    color: '#000',
+    border: 'none',
+    cursor: 'pointer',
+    borderRadius: '8px',
+    marginTop: '20px'
+  });
 
-// ✅ Overlay text message
-const overlayText = document.createElement('div');
-overlayText.innerText = '⏰ You are now on a 1-hour countdown.\nYour cart will expire if no activity happens.';
-overlayText.style.marginBottom = '20px';
-overlayText.style.whiteSpace = 'pre-line';
-overlay.appendChild(overlayText);
+  overlay.appendChild(exitBtn);
+  document.body.appendChild(overlay);
 
-// ✅ Exit button
-const exitButton = document.createElement('button');
-exitButton.innerText = 'Exit';
-exitButton.style.padding = '12px 24px';
-exitButton.style.fontSize = '18px';
-exitButton.style.borderRadius = '5px';
-exitButton.style.border = 'none';
-exitButton.style.backgroundColor = '#fff';
-exitButton.style.color = '#000';
-exitButton.style.cursor = 'pointer';
-
-exitButton.onclick = () => {
-  overlay.remove();     // Hide overlay
-  showTimer();          // Start countdown at bottom
-};
-
-overlay.appendChild(exitButton);
-
-// ✅ Start countdown at bottom
-function showTimer() {
-  if (!timerVisible) {
-    urgencyBox.style.display = 'block';
-    timerVisible = true;
-    counter = 3600;
-    updateCountdown();
-    countdown = setInterval(updateCountdown, 1000);
+  // Show overlay only once
+  function showOverlayOnce() {
+    if (!localStorage.getItem(FORM_SHOWN_KEY)) {
+      overlay.style.display = 'flex';
+      localStorage.setItem(FORM_SHOWN_KEY, 'true');
+      expireCart();
+    }
   }
-}
 
-// ✅ Hide bottom timer
-function hideTimer() {
-  urgencyBox.style.display = 'none';
-  clearInterval(countdown);
-  timerVisible = false;
-}
-
-// ✅ Update timer text
-function updateCountdown() {
-  let minutes = Math.floor(counter / 60);
-  let seconds = counter % 60;
-  if (counter > 0) {
-    urgencyBox.textContent = `Hurry! Your cart will expire in ${minutes}:${seconds.toString().padStart(2, '0')}`;
-    counter--;
-  } else {
-    urgencyBox.textContent = `Your cart has expired!`;
-    clearInterval(countdown);
+  // Example cart-expiry logic (replace with your real one)
+  function expireCart() {
+    console.log('Cart expired due to inactivity');
+    // TODO: You can clear the cart using backend call here
   }
-}
 
-// ✅ Reset inactivity timer
-function resetInactivityTimer() {
-  clearTimeout(timer);
-  hideTimer();
-  timer = setTimeout(() => {
-    document.body.appendChild(overlay); // Show overlay popup
-  }, inactivityTime);
-}
+  // Exit hides overlay
+  exitBtn.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
 
-// ✅ Watch user activity
-['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach((event) => {
-  document.addEventListener(event, resetInactivityTimer);
-});
+  // Reset timer on activity
+  function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(showOverlayOnce, ONE_HOUR);
+  }
 
-// ✅ Start checking
-resetInactivityTimer();
+  ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+    window.addEventListener(evt, resetInactivityTimer)
+  );
+
+  // Start timer immediately
+  resetInactivityTimer();
+})();
