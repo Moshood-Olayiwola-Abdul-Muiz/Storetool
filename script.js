@@ -4,14 +4,14 @@
   let inactivityTimer;
   let countdownInterval;
 
-  // Create overlay
+  // Overlay
   const overlay = document.createElement('div');
   overlay.style.position = 'fixed';
   overlay.style.top = 0;
   overlay.style.left = 0;
   overlay.style.width = '100%';
   overlay.style.height = '100%';
-  overlay.style.backgroundColor = '#000';
+  overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
   overlay.style.display = 'none';
   overlay.style.zIndex = 9999;
   overlay.style.justifyContent = 'center';
@@ -20,33 +20,31 @@
   overlay.style.fontFamily = 'Arial, sans-serif';
   document.body.appendChild(overlay);
 
-  // Create message + exit button container
+  // Message box
   const messageBox = document.createElement('div');
-  messageBox.style.display = 'flex';
-  messageBox.style.flexDirection = 'column';
-  messageBox.style.alignItems = 'center';
-  messageBox.style.gap = '20px';
+  messageBox.style.textAlign = 'center';
+  messageBox.style.color = '#fff';
 
-  // Exit Button
+  const overlayText = document.createElement('p');
+  overlayText.textContent = 'Product will be automatically removed from cart after session timeout';
+  overlayText.style.fontSize = '18px';
+  overlayText.style.marginBottom = '20px';
+
   const exitButton = document.createElement('button');
   exitButton.textContent = 'Exit';
-  exitButton.style.padding = '14px 28px';
-  exitButton.style.fontSize = '18px';
+  exitButton.style.padding = '12px 24px';
+  exitButton.style.fontSize = '16px';
   exitButton.style.backgroundColor = '#fff';
   exitButton.style.color = '#000';
   exitButton.style.border = 'none';
   exitButton.style.borderRadius = '8px';
   exitButton.style.cursor = 'pointer';
 
-  // Side Message
-  const sideMessage = document.createElement('p');
-  sideMessage.textContent = 'Your item will expire after 1hr delay';
-  sideMessage.style.color = '#fff';
-  sideMessage.style.fontSize = '16px';
-  sideMessage.style.margin = 0;
-  sideMessage.style.marginTop = '10px';
+  messageBox.appendChild(overlayText);
+  messageBox.appendChild(exitButton);
+  overlay.appendChild(messageBox);
 
-  // Timer at the bottom
+  // Countdown timer at bottom
   const timerDisplay = document.createElement('div');
   timerDisplay.style.position = 'fixed';
   timerDisplay.style.bottom = '10px';
@@ -58,15 +56,9 @@
   timerDisplay.style.borderRadius = '6px';
   timerDisplay.style.fontSize = '14px';
   timerDisplay.style.zIndex = 9999;
-  timerDisplay.style.display = 'none';
   document.body.appendChild(timerDisplay);
 
-  // Add to overlay
-  messageBox.appendChild(exitButton);
-  messageBox.appendChild(sideMessage);
-  overlay.appendChild(messageBox);
-
-  // Show overlay function
+  // Show overlay
   function showOverlay() {
     if (!localStorage.getItem(OVERLAY_SHOWN_KEY)) {
       overlay.style.display = 'flex';
@@ -75,12 +67,11 @@
     }
   }
 
-  // Countdown timer logic
-  function startCountdown(duration) {
-    let remaining = duration;
-    timerDisplay.style.display = 'block';
+  // Timer
+  function startCountdown(seconds) {
+    let remaining = seconds;
 
-    function updateDisplay() {
+    function update() {
       const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
       const secs = String(remaining % 60).padStart(2, '0');
       timerDisplay.textContent = `Session expires in ${mins}:${secs}`;
@@ -91,32 +82,29 @@
       }
     }
 
-    updateDisplay();
-    countdownInterval = setInterval(updateDisplay, 1000);
+    update();
+    countdownInterval = setInterval(update, 1000);
   }
 
-  // Exit click
-  exitButton.addEventListener('click', () => {
+  // Exit
+  exitButton.onclick = () => {
     overlay.style.display = 'none';
-  });
+  };
 
   // Reset inactivity timer
-  function resetInactivityTimer() {
+  function resetTimer() {
     clearTimeout(inactivityTimer);
     clearInterval(countdownInterval);
-    timerDisplay.style.display = 'none';
-
     inactivityTimer = setTimeout(() => {
       showOverlay();
     }, INACTIVITY_LIMIT);
-
     startCountdown(INACTIVITY_LIMIT / 1000);
   }
 
-  // Detect user activity
-  ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(event =>
-    document.addEventListener(event, resetInactivityTimer)
-  );
+  // User activity
+  ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach(evt => {
+    document.addEventListener(evt, resetTimer);
+  });
 
-  resetInactivityTimer();
+  resetTimer();
 })();
