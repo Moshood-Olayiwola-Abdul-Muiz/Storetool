@@ -50,7 +50,7 @@ function updateCountdown() {
 function resetInactivityTimer() {
   hideTimer();
   clearTimeout(timer);
-  timer = setTimeout(showTimer, inactivityTime);
+  showTimer(); // Show immediately on interaction
 }
 
 ['click', 'mousemove', 'keydown', 'touchstart', 'scroll'].forEach((event) => {
